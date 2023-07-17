@@ -1,4 +1,4 @@
-# crypto - Cryptography library for Racket
+# ncrypto - Pure racket Cryptography library for Racket
 
 ## Installation
 Later available !!!!
