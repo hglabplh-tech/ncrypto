@@ -18,8 +18,8 @@
          (only-in srfi/60 rotate-bit-field)
          binaryio/integer
          rnrs/arithmetic/bitwise-6
-         "basic-sig-utils.rkt"
-         "endianess.rkt"
+         "../utils/basic-sig-utils.rkt"
+         "../utils/endianess.rkt"
          "md-ctx.rkt"
          )
 
