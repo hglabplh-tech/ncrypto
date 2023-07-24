@@ -32,7 +32,7 @@
                 
 
 
-(struct ripe-md-state (
+(struct md-state (
     hash               ;;/* The current hash state */
     length             ;;/* Total number of _bits_ (not bytes) added to the
                        ;;    hash.  This includes bits that have been buffered
@@ -41,5 +41,5 @@
     bufpos             ;;/* number of bytes currently in the buffer */
 ))
 
-(ripe-md-state (list #x45 #x6754 #x4546 #x89686) 5 #x8568758698689 10)
+(md-state (list #x45 #x6754 #x4546 #x89686) 5 #x8568758698689 10)
 

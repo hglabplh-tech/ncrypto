@@ -221,7 +221,7 @@
   (list-fun (relation-ref bool-funs-rel 'index index 'fun-pair-lr)))
 
 (define (init-bufw hash-state)
-  (let ([buffer (ripe-md-state-buffer hash-state)])
+  (let ([buffer (md-state-buffer hash-state)])
     (let fill-buf ([w 0]
                    [val-list null])
       (cond [(eq? w 16)
@@ -238,42 +238,42 @@
 (define (init-regs hash-state)
   (values
    (make-regs-left
-    (vector-ref (ripe-md-state-hash hash-state) 0)
-    (vector-ref (ripe-md-state-hash hash-state) 1)
-    (vector-ref (ripe-md-state-hash hash-state) 2)
-    (vector-ref (ripe-md-state-hash hash-state) 3)
-    (vector-ref (ripe-md-state-hash hash-state) 4))
+    (vector-ref (md-state-hash hash-state) 0)
+    (vector-ref (md-state-hash hash-state) 1)
+    (vector-ref (md-state-hash hash-state) 2)
+    (vector-ref (md-state-hash hash-state) 3)
+    (vector-ref (md-state-hash hash-state) 4))
    (make-regs-right
-    (vector-ref (ripe-md-state-hash hash-state) 0)
-    (vector-ref (ripe-md-state-hash hash-state) 1)
-    (vector-ref (ripe-md-state-hash hash-state) 2)
-    (vector-ref (ripe-md-state-hash hash-state) 3)
-    (vector-ref (ripe-md-state-hash hash-state) 4))))
+    (vector-ref (md-state-hash hash-state) 0)
+    (vector-ref (md-state-hash hash-state) 1)
+    (vector-ref (md-state-hash hash-state) 2)
+    (vector-ref (md-state-hash hash-state) 3)
+    (vector-ref (md-state-hash hash-state) 4))))
 
 (define (return-compress-state hash-state regs-left regs-right)
   (let* (
-         [t (+ (vector-ref (ripe-md-state-hash hash-state) 1)
+         [t (+ (vector-ref (md-state-hash hash-state) 1)
                (regs-ref regs-left 'CL) (regs-ref regs-right 'DR))]
          [hash-vect (list->vector (append (list t)
-                                          (list (+ (vector-ref (ripe-md-state-hash hash-state) 2)
+                                          (list (+ (vector-ref (md-state-hash hash-state) 2)
                                                    (regs-ref regs-left 'DL) (regs-ref regs-right 'ER)))
-                                          (list (+ (vector-ref (ripe-md-state-hash hash-state) 3)
+                                          (list (+ (vector-ref (md-state-hash hash-state) 3)
                                                    (regs-ref regs-left 'EL) (regs-ref regs-right 'AR)))
-                                          (list (+ (vector-ref (ripe-md-state-hash hash-state) 4)
+                                          (list (+ (vector-ref (md-state-hash hash-state) 4)
                                                    (regs-ref regs-left 'AL) (regs-ref regs-right 'BR)))
-                                          (list (+ (vector-ref (ripe-md-state-hash hash-state) 0)
+                                          (list (+ (vector-ref (md-state-hash hash-state) 0)
                                                    (regs-ref regs-left 'BL) (regs-ref regs-right 'CR)))))])
-    (ripe-md-state hash-vect (ripe-md-state-length hash-state) (make-bytes 64 0) 0)
+    (md-state hash-vect (md-state-length hash-state) (make-bytes 64 0) 0)
     ))
 
 
 
 ;;Initial values for the chaining variables.
 ;;This is just 0123456789ABCDEFFEDCBA9876543210F0E1D2C3 in little-endian. 
-(define (init-ripe-md160)
+(define (init-md160)
   (let ([hash-vect (vector  #x67452301 #xEFCDAB89 #x98BADCFE #x10325476 #xC3D2E1F0 )]
         [buffer (make-bytes 64 0)])    
-    (ripe-md-state hash-vect 0 buffer 0)))
+    (md-state hash-vect 0 buffer 0)))
 
 ;; make bufw as vector of integers then build the line call-with-values bufw reg-left reg-right t
 (define (ripemd-compress-fun hash-state)
@@ -333,7 +333,7 @@
                             'CR 'BR)
                            'BR tr)))])))))
 
-(define (ripe-md-update hash-state data)  
+(define (md-update hash-state data)  
   (let process-data ([h-state hash-state]
                      [data-len (bytes-length data)]                          
                      [buf-pos 0]
@@ -345,9 +345,9 @@
              (let* ([len-bits (* (+ data-len bytes-needed) 8)]
                     [data-pos-new (+ data-pos bytes-needed)]
                     [data-buffer (subbytes data data-pos data-pos-new)]
-                    [buffer (bytes-append (ripe-md-state-buffer h-state)
+                    [buffer (bytes-append (md-state-buffer h-state)
                                           data-buffer)]
-                    [h-state-comp (ripe-md-state (ripe-md-state-hash h-state) len-bits buffer buf-pos)])
+                    [h-state-comp (md-state (md-state-hash h-state) len-bits buffer buf-pos)])
                (process-data (ripemd-compress-fun h-state-comp)
                              (- data-len bytes-needed)
                              (+ buf-pos bytes-needed)
@@ -355,34 +355,34 @@
             [else
              (let*  ([data-pos-new (+ data-pos data-len)]
                      [data-buffer (subbytes data data-pos data-pos-new)]
-                     [buffer (bytes-append (ripe-md-state-buffer h-state)
+                     [buffer (bytes-append (md-state-buffer h-state)
                                            data-buffer)])
-               (ripe-md-state (ripe-md-state-hash h-state) (* (+ data-len bytes-needed) 8) buffer data-pos-new))]))))
+               (md-state (md-state-hash h-state) (* (+ data-len bytes-needed) 8) buffer data-pos-new))]))))
                    
                             
-(define (ripe-md-final hash-state)
+(define (md-final hash-state)
   ;; append padding
-  (let* ([buffer (bytes-append (ripe-md-state-buffer hash-state) #"#x80")]
-         [buf-pos (add1 (ripe-md-state-bufpos hash-state))]
+  (let* ([buffer (bytes-append (md-state-buffer hash-state) #"#x80")]
+         [buf-pos (add1 (md-state-bufpos hash-state))]
          [h-state-new (cond [(> buf-pos 56)
                              ;; call compress
-                             (let ([h-state (ripe-md-state  (ripe-md-state-hash hash-state)
-                                                            (ripe-md-state-length hash-state)
+                             (let ([h-state (md-state  (md-state-hash hash-state)
+                                                            (md-state-length hash-state)
                                                             buffer
                                                             64)])
                                (ripemd-compress-fun h-state))]
-                            [else (ripe-md-state  (ripe-md-state-hash hash-state)
-                                                  (ripe-md-state-length hash-state)
+                            [else (md-state  (md-state-hash hash-state)
+                                                  (md-state-length hash-state)
                                                   buffer
                                                   buf-pos)])])
     (let* ([buffer-new (bytes-append (subbytes (- (bytes-length
-                                                   (ripe-md-state-buffer h-state-new)) 8))
-                                     (64->bytes-little (u64+ (ripe-md-state-length h-state-new))))]
-           [h-state-compress (ripe-md-state (ripe-md-state-hash h-state-new)
-                                            (ripe-md-state-length h-state-new)
+                                                   (md-state-buffer h-state-new)) 8))
+                                     (64->bytes-little (u64+ (md-state-length h-state-new))))]
+           [h-state-compress (md-state (md-state-hash h-state-new)
+                                            (md-state-length h-state-new)
                                             buffer 64)]
            [h-state-final (ripemd-compress-fun h-state-compress)])
-      (let ([hash-vect (ripe-md-state-hash h-state-final)])
+      (let ([hash-vect (md-state-hash h-state-final)])
         (let loop-digest ([digest (32->bytes-little
                                    (vector-ref hash-vect 0))]
                           [index 1])
