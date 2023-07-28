@@ -44,11 +44,11 @@
                                                          (vector-ref rkey-vect (rk-offset + 0))
                                                          (bitwise-and (list-ref list-te4-encr
                                                                    (bitwise-and (>> temp 16) #xff))#xff000000)
-                                                           (bitwise-and (list-ref list-te4-encr
+                                                         (bitwise-and (list-ref list-te4-encr
                                                                    (bitwise-and (>> temp 8) #xff)) #x00ff0000)
-                                                            (bitwise-and (list-ref list-te4-encr
+                                                         (bitwise-and (list-ref list-te4-encr
                                                                    (bitwise-and (>> temp 0) #xff)) #x0000ff00)
-                                                            (bitwise-and (list-ref list-te4-encr
+                                                         (bitwise-and (list-ref list-te4-encr
                                                                    (bitwise-and (>> temp 24) #xff))#x000000ff)
                                                             (list-ref rcon index))))]
              [rkey-vect-int (vector-append (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 1))
