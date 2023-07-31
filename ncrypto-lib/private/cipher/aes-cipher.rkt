@@ -91,8 +91,8 @@
              rkey-vect]
             [(let* ([rkey-vect-int (vector-append (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 4))
                                                                               (vector-ref rkey-vect-int (rk-offset + 9))))
-                                                  (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 10))
-                                                                              (vector-ref rkey-vect-int (rk-offset + 7)))))])
+                                                  (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 5))
+                                                                              (vector-ref rkey-vect-int (rk-offset + 10)))))])
                (round-192 rkey-vect-int (add1 index) (+ rk-offset rk-add)))]
                
             ))))
@@ -138,11 +138,11 @@
                                                    (bitwise-and (list-ref list-te4-encr
                                                                           (bitwise-and (>> temp 0) #xff)) #x000000ff)
                                                    (list-ref rcon index)))
-                                    (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 4))
+                                    (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 5))
                                                                 (vector-ref rkey-vect-int (rk-offset + 12))))
-                                    (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 10))
+                                    (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 6))
                                                                 (vector-ref rkey-vect-int (rk-offset + 13))))
-                                    (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 10))
+                                    (make-vector 1 (bitwise-xor (vector-ref rkey-vect-int (rk-offset + 7))
                                                                 (vector-ref rkey-vect-int (rk-offset + 14)))))])
                (round-192 rkey-vect-int (add1 index) (+ rk-offset rk-add)))]
                
