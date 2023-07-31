@@ -128,7 +128,7 @@
             [(let* ([rkey-vect-int (vector-append
                                     (make-vector 1
                                                  ( bitwise-xor
-                                                   (vector-ref rkey-vect (rk-offset + 0))
+                                                   (vector-ref rkey-vect (rk-offset + 4))
                                                    (bitwise-and (list-ref list-te4-encr
                                                                           (bitwise-and (>> temp 24) #xff))#xff000000)
                                                    (bitwise-and (list-ref list-te4-encr
