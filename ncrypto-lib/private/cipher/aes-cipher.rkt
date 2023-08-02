@@ -32,6 +32,13 @@
     (vector-set! ret-vect pos val)
     ret-vect))
 
+(define (swap-vect-mem vect pos-a pos-b)
+  (let* ([temp (vector-ref vect pos-a)]
+         [rkey-vect (mod-vect-ret-new vect pos-a (vector-ref vect pos-b))]
+         [rkey-vect (mod-vect-ret-new vect pos-b temp)])
+         vect))
+          
+
 (define (round-calc128 round-key-vect rk-add)
   (let round-128 ([rkey-vect round-key-vect]
                   [index 0]
@@ -181,6 +188,32 @@
                               (make-vector 1
                                            (bytes->32-big (subbytes cipher-key 28 4))))])
         (cond [(eq? key-bits 256)
-               (values 14 (round-calc256 round-key-vect 8))]))
+               (values 14 (round-calc256 round-key-vect 8))]))))
            
-      round-key))) ;; here follows the calculation !!!
+      ) ;; here follows the calculation !!!
+
+
+(define (setup-decode cipher-key key-bits)
+  (let-values ([(nr round-key-vect) (setup-encode cipher-key key-bits)])
+    (let ([rkey-vect-2 
+    (let loop-through ([i 4]
+          [j (- (* 4 nr) 4)]          
+          [rkey-vect round-key-vect])
+      (cond [(< i j)             
+      ;;temp = rk[i    ]; rk[i    ] = rk[j    ]; rk[j    ] = temp;
+      (let* ([temp (vector-ref rkey-vect i)]
+             [rkey-vect (swap-vect-mem rkey-vect i j)]
+             [rkey-vect (swap-vect-mem rkey-vect (+ i 1) (+ j 1))]
+             [rkey-vect (swap-vect-mem rkey-vect (+ i 2) (+ j 2))]
+             [rkey-vect (swap-vect-mem rkey-vect (+ i 3) (+ j 3))])
+        (loop-through (+ i 4) (- j 4) rkey-vect))]
+            [rkey-vect]))])
+      rkey-vect-2 ))) ;; here we have to continue calculation
+          
+          
+            
+        
+             
+          
+    
+  
