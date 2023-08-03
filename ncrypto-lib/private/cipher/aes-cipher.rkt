@@ -36,7 +36,7 @@
   (let* ([temp (vector-ref vect pos-a)]
          [rkey-vect (mod-vect-ret-new vect pos-a (vector-ref vect pos-b))]
          [rkey-vect (mod-vect-ret-new vect pos-b temp)])
-         vect))
+    vect))
           
 
 (define (round-calc128 round-key-vect rk-add)
@@ -190,25 +190,106 @@
         (cond [(eq? key-bits 256)
                (values 14 (round-calc256 round-key-vect 8))]))))
            
-      ) ;; here follows the calculation !!!
+  ) ;; here follows the calculation !!!
 
 
 (define (setup-decode cipher-key key-bits)
   (let-values ([(nr round-key-vect) (setup-encode cipher-key key-bits)])
     (let ([rkey-vect-2 
-    (let loop-through ([i 4]
-          [j (- (* 4 nr) 4)]          
-          [rkey-vect round-key-vect])
-      (cond [(< i j)             
-      ;;temp = rk[i    ]; rk[i    ] = rk[j    ]; rk[j    ] = temp;
-      (let* ([temp (vector-ref rkey-vect i)]
-             [rkey-vect (swap-vect-mem rkey-vect i j)]
-             [rkey-vect (swap-vect-mem rkey-vect (+ i 1) (+ j 1))]
-             [rkey-vect (swap-vect-mem rkey-vect (+ i 2) (+ j 2))]
-             [rkey-vect (swap-vect-mem rkey-vect (+ i 3) (+ j 3))])
-        (loop-through (+ i 4) (- j 4) rkey-vect))]
-            [rkey-vect]))])
-      rkey-vect-2 ))) ;; here we have to continue calculation
+           (let loop-through ([i 4]
+                              [j (- (* 4 nr) 4)]          
+                              [rkey-vect round-key-vect])
+             (cond [(< i j)             
+                    ;;temp = rk[i    ]; rk[i    ] = rk[j    ]; rk[j    ] = temp;
+                    (let* ([temp (vector-ref rkey-vect i)]
+                           [rkey-vect (swap-vect-mem rkey-vect i j)]
+                           [rkey-vect (swap-vect-mem rkey-vect (+ i 1) (+ j 1))]
+                           [rkey-vect (swap-vect-mem rkey-vect (+ i 2) (+ j 2))]
+                           [rkey-vect (swap-vect-mem rkey-vect (+ i 3) (+ j 3))])
+                      (loop-through (+ i 4) (- j 4) rkey-vect))]
+                   [rkey-vect]))])
+      (let loop-through-fin ([rkey-vect-fin rkey-vect-2]
+                             [i 1]
+                             [rk-offset 4])
+        (cond [(< i nr)
+               (let* ([temp (vector-ref rkey-vect-fin (+ rk-offset 0))]
+                      [rkey-vect-fin (mod-vect-ret-new rkey-vect-fin  (+ rk-offset 0) (list-ref (bitwise-xor
+                                                                                                 ;; maybe change all occur. of bit shift 24 see original source
+                                                                                                 (list-ref list-td0-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 24) #xff) #xff))))
+                                                                                                 (list-ref list-td1-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 16) #xff) #xff))))
+                                                                                                 (list-ref list-td2-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp  8) #xff) #xff))))
+                                                                                                 (list-ref list-td3-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 0) #xff) #xff)))))))]
+                      [temp (vector-ref rkey-vect-fin (+ rk-offset 1))]
+                      [rkey-vect-fin (mod-vect-ret-new rkey-vect-fin  (+ rk-offset 1) (list-ref (bitwise-xor
+                                                                                                 (list-ref list-td0-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 24) #xff) #xff))))
+                                                                                                 (list-ref list-td1-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 16) #xff) #xff))))
+                                                                                                 (list-ref list-td2-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp  8) #xff) #xff))))
+                                                                                                 (list-ref list-td3-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 0) #xff) #xff)))))))]
+                      [temp (vector-ref rkey-vect-fin (+ rk-offset 2))]
+                      [rkey-vect-fin (mod-vect-ret-new rkey-vect-fin  (+ rk-offset 2) (list-ref (bitwise-xor
+                                                                                                 (list-ref list-td0-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 24) #xff) #xff))))
+                                                                                                 (list-ref list-td1-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 16) #xff) #xff))))
+                                                                                                 (list-ref list-td2-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp  8) #xff) #xff))))
+                                                                                                 (list-ref list-td3-decr
+                                                                                                           (bitwise-and (list-ref list-te4-encr
+                                                                                                                                  (bitwise-and
+                                                                                                                                   (bitwise-and (>> temp 0) #xff) #xff)))))))]
+                      [temp (vector-ref rkey-vect-fin (+ rk-offset (+ rk-offset 0)))]
+                      [rkey-vect-fin (mod-vect-ret-new rkey-vect-fin 3 (list-ref (bitwise-xor
+                                                                                  (list-ref list-td0-decr
+                                                                                            (bitwise-and (list-ref list-te4-encr
+                                                                                                                   (bitwise-and
+                                                                                                                    (bitwise-and (>> temp 24) #xff) #xff))))
+                                                                                  (list-ref list-td1-decr
+                                                                                            (bitwise-and (list-ref list-te4-encr
+                                                                                                                   (bitwise-and
+                                                                                                                    (bitwise-and (>> temp 16) #xff) #xff))))
+                                                                                  (list-ref list-td2-decr
+                                                                                            (bitwise-and (list-ref list-te4-encr
+                                                                                                                   (bitwise-and
+                                                                                                                    (bitwise-and (>> temp  8) #xff) #xff))))
+                                                                                  (list-ref list-td3-decr
+                                                                                            (bitwise-and (list-ref list-te4-encr
+                                                                                                                   (bitwise-and
+                                                                                                                    (bitwise-and (>> temp 0) #xff) #xff)))))))])
+                 (loop-through-fin rkey-vect-fin (add1 i) (+ rk-offset 4))
+                 )]
+              [(values nr rkey-vect-fin)])))))
+                             
+                             
           
           
             
@@ -216,4 +297,3 @@
              
           
     
-  
