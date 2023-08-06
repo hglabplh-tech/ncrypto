@@ -23,8 +23,9 @@
          (only-in srfi/60 rotate-bit-field)
           (only-in srfi/26 cut)
          (only-in srfi/43 vector-unfold)
+         binaryio/integer
          rnrs/arithmetic/bitwise-6
-         "../utils/basic-sig-utils.rkt"
+         "basic-sig-utils.rkt"
          )
          
 (provide (all-defined-out))

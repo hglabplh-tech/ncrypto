@@ -160,7 +160,7 @@
                     
 
          
-(define (aes-setup-encode cipher-key key-bits)
+(define (setup-encode cipher-key key-bits)
   (let* ([round-key null]
          [round-key (append round-key (list (bytes->32-big (subbytes cipher-key 0 4))))]
          [round-key (append round-key (list (bytes->32-big (subbytes cipher-key 4 4))))]
@@ -193,7 +193,7 @@
   ) ;; here follows the calculation !!!
 
 
-(define (aes-setup-decode cipher-key key-bits)
+(define (setup-decode cipher-key key-bits)
   (let-values ([(nr round-key-vect) (setup-encode cipher-key key-bits)])
     (let ([rkey-vect-2 
            (let loop-through ([i 4]
