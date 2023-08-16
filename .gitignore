@@ -2,3 +2,6 @@
 *.rkt~
 *.zo
 *.dep
+*.rkt~
+*.dep
+*.zo
