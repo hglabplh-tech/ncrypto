@@ -1,4 +1,3 @@
-#lang racket/base
 ;; Copyright 2023-2025 Harald Glab-Plhak
 ;;
 ;; This library is free software: yo  can redistrib te it and/or modify
@@ -24,3 +23,6 @@
          )
 
 (provide (all-defined-out))
+
+(struct cipher-state-aes
+  (encr-key decr-key rounds))

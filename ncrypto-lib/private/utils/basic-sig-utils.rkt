@@ -66,6 +66,26 @@
   (for/vector ([tuple (in-vector (rel-tuples rel))])
     (vector-ref tuple keyindex)))
 
+;; something like registers built as hasheq
+
+(define (assign-reg-to-reg regs t s)  
+  (hash-set regs t (hash-ref regs s #f)))
+
+(define (set-reg regs sym val)
+  (hash-set regs sym val))
+
+(define (assign-regs regs reg-pairs-in)
+  (let recur-regs ([reg-pairs reg-pairs-in]
+                   [regs-out regs])
+    (cond [(null? reg-pairs) regs-out]
+          [else (let ([first-pair (car reg-pairs)])
+                  (recur-regs
+                   (cdr reg-pairs)
+                   (assign-reg-to-reg regs-out (car first-pair) (cadr first-pair))))])))
+
+(define (regs-ref regs register)
+  (hash-ref regs register #f))
+
 
 
 (define (sqrt x)

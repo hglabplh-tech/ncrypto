@@ -176,20 +176,7 @@
   (make-hasheq 
    (list (cons 'AR  ar) (cons 'BR br) (cons 'CR cr) (cons 'DR dr) (cons 'ER er))))
 
-(define (assign-reg-to-reg regs t s)  
-  (hash-set regs t (hash-ref regs s #f)))
 
-(define (set-reg regs sym val)
-  (hash-set regs sym val))
-
-(define (assign-regs regs reg-pairs-in)
-  (let recur-regs ([reg-pairs reg-pairs-in]
-                   [regs-out regs])
-    (cond [(null? reg-pairs) regs-out]
-          [else (let ([first-pair (car reg-pairs)])
-                  (recur-regs
-                   (cdr reg-pairs)
-                   (assign-reg-to-reg regs-out (car first-pair) (cadr first-pair))))]))) 
 
 (define (rel-list-ref rel-ref index list-index)
   (let ([list-of-int (rel-ref index)])
@@ -202,8 +189,7 @@
 (define regs-assign-right (list
                            (list 'AR 'ER)
                            (list 'ER 'DR)))
-(define (regs-ref regs register)
-  (hash-ref regs register #f))
+
 
 (define bool-funs-rel
   (relation
@@ -255,13 +241,13 @@
          [t (+ (vector-ref (md-state-hash hash-state) 1)
                (regs-ref regs-left 'CL) (regs-ref regs-right 'DR))]
          [hash-vect (list->vector (append (list t)
-                                          (list (+ (vector-ref (md-state-hash hash-state) 2)
+                                          (list (u32+ (vector-ref (md-state-hash hash-state) 2)
                                                    (regs-ref regs-left 'DL) (regs-ref regs-right 'ER)))
-                                          (list (+ (vector-ref (md-state-hash hash-state) 3)
+                                          (list (u32+ (vector-ref (md-state-hash hash-state) 3)
                                                    (regs-ref regs-left 'EL) (regs-ref regs-right 'AR)))
-                                          (list (+ (vector-ref (md-state-hash hash-state) 4)
+                                          (list (u32+ (vector-ref (md-state-hash hash-state) 4)
                                                    (regs-ref regs-left 'AL) (regs-ref regs-right 'BR)))
-                                          (list (+ (vector-ref (md-state-hash hash-state) 0)
+                                          (list (u32+ (vector-ref (md-state-hash hash-state) 0)
                                                    (regs-ref regs-left 'BL) (regs-ref regs-right 'CR)))))])
     (md-state hash-vect (md-state-length hash-state) (make-bytes 64 0) 0)
     ))
@@ -298,7 +284,7 @@
                       [kr-value (KR-ref round-of-calc)]
                       [kl-value (KL-ref round-of-calc)]
                       [tl (+ (rotl (u32+ sl-value) 
-                                   (+ (regs-ref regs-l 'AL)
+                                   (u32+ (regs-ref regs-l 'AL)
                                       ((bool-funs-ref round-of-calc car)
                                        (regs-ref regs-l 'BL)
                                        (regs-ref regs-l 'CL)
@@ -307,7 +293,7 @@
                                       kl-value) 32)
                              (regs-ref regs-l 'EL))] ;; here add the lines for tl/tr 
                       [tr (+ (rotl (u32+ sr-value) 
-                                   (+ (regs-ref regs-r 'AR)
+                                   (u32+ (regs-ref regs-r 'AR)
                                       ((bool-funs-ref round-of-calc cadr)
                                        (regs-ref regs-r 'BR)
                                        (regs-ref regs-r 'CR)

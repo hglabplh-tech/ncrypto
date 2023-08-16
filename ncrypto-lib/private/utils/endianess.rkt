@@ -185,4 +185,5 @@
 (bytes->32-big (32->bytes-little 89900011))
 (bytes->32-little (32->bytes-little 89900011))
 (bytes->32-big (32->bytes-big 89900011))
+(bytes->32-big (bytes #x00 #x00 #x00 #x78))
    
