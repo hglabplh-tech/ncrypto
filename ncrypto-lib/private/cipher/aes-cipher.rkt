@@ -320,38 +320,68 @@
 
 (define (really-calculate-round round-key-offset round-key regs)
   (let* ([rk-offset round-key-offset]
-         [result (set-reg 'T0 (bitwise-xor
-                          (list-ref list-te0-encr (>> (u32+ (regs-ref 'S0) 24)))
-                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref 'S1) 18)) (u32+ #xff)))
-                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref 'S2) 8)) (u32+ #xff)))
-                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref 'S2) 8) (u32+ #xff)))
+         [result (set-reg regs 'T0 (bitwise-xor
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S0) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S1) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S2) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S2)) (u32+ #xff)))
                           (u32+ (vector-ref round-key rk-offset))))]
          [rk-offset (add1 rk-offset)]
-         [result (set-reg 'T1 (bitwise-xor
-                          (list-ref list-te0-encr (>> (u32+ (regs-ref 'S1) 24)))
-                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref 'S2) 18)) (u32+ #xff)))
-                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref 'S3) 8)) (u32+ #xff)))
-                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref 'S0) 8) (u32+ #xff)))
+         [result (set-reg result 'T1 (bitwise-xor
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S1) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S2) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S3) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S0)) (u32+ #xff)))
                           (u32+ (vector-ref round-key rk-offset))))]
          [rk-offset (add1 rk-offset)]
-          [result (set-reg 'T1 (bitwise-xor
-                          (list-ref list-te0-encr (>> (u32+ (regs-ref 'S2) 24)))
-                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref 'S3) 18)) (u32+ #xff)))
-                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref 'S0) 8)) (u32+ #xff)))
-                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref 'S1) 8) (u32+ #xff)))
+          [result (set-reg 'T2 (bitwise-xor
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S2) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S3) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S0) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S1)) (u32+ #xff)))
                           (u32+ (vector-ref round-key rk-offset))))]
           [rk-offset (add1 rk-offset)]
           [result (set-reg 'T1 (bitwise-xor
-                          (list-ref list-te0-encr (>> (u32+ (regs-ref 'S3) 24)))
-                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref 'S0) 18)) (u32+ #xff)))
-                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref 'S1) 8)) (u32+ #xff)))
-                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref 'S2) 8) (u32+ #xff)))
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S3) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S0) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S1) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S2)) (u32+ #xff)))
                           (u32+ (vector-ref round-key rk-offset))))]
           [rk-offset (add1 rk-offset)])
     (values rk-offset result)))
          
                           
-  
+(define (aes-final-load-encr-bytes regs round-key nr)
+  (let* ([rk-offset (u32+ (<< nr 2))]
+        [out (32->bytes-big (u32+ (bitwise-xor
+                             (u32+ (bitwise-and (list-ref list-te4-encr (>> (u32+ (regs-ref regs 'T0) 24)))                    #xff000000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T1) 16)) #xff)) #x00ff0000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T2) 8)) #xff))  #x0000ff00))
+                              (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (u32+ (regs-ref regs 'T3)) #xff))        #x000000ff))
+                              (u32+ (vector-ref round-key (+ rk-offset 0)))
+                             )))]
+         [out (bytes-append out (32->bytes-big (u32+ (bitwise-xor
+                             (u32+ (bitwise-and (list-ref list-te4-encr (>> (u32+ (regs-ref regs 'T1) 24)))                    #xff000000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T2) 16)) #xff)) #x00ff0000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T3) 8)) #xff))  #x0000ff00))
+                              (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (u32+ (regs-ref regs 'T0)) #xff)) #x000000ff))
+                              (u32+ (vector-ref round-key (+ rk-offset 1)))
+                             ))))]
+         [out (bytes-append out (32->bytes-big (u32+ (bitwise-xor
+                             (u32+ (bitwise-and (list-ref list-te4-encr (>> (u32+ (regs-ref regs 'T2) 24)))                    #xff000000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T3) 16)) #xff)) #x00ff0000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T0) 8)) #xff))  #x0000ff00))
+                              (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (u32+ (regs-ref regs 'T1)) #xff)) #x000000ff))
+                              (u32+ (vector-ref round-key (+ rk-offset 2)))
+                             ))))]
+          [out (bytes-append out (32->bytes-big (u32+ (bitwise-xor
+                             (u32+ (bitwise-and (list-ref list-te4-encr (>> (u32+ (regs-ref regs 'T3) 24)))                    #xff000000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T0) 16)) #xff)) #x00ff0000))
+                             (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T1) 8)) #xff))  #x0000ff00))
+                              (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (u32+ (regs-ref regs 'T2)) #xff)) #x000000ff))
+                              (u32+ (vector-ref round-key (+ rk-offset 3)))
+                             ))))])
+      out))
 
 (define (aes-encrypt round-key nr in-bytes)
   (let ([regs-calc (make-regs-calc 0 0 0 0 0 0 0 0)])
@@ -372,9 +402,9 @@
                                             (assign-regs regs-int regs-to-s)]
                                            [regs-int])])
                  (calc-round regs-int (add1 rk-offset) (add1 round))) ] ;; think about conditions if they are ok
-                [(let ([out (make-bytes 4 (bitwise-xor (32->bytes-big (list-ref list-te4-encr (>> (u32+ (regs-ref 'S1) 24))))))]);; correct this and format this can be extracted
-                   out)
-                   ]))))));; really do finalize computation here
+                [(aes-final-load-encr-bytes regs-int round-key nr )]);; correct this and format this can be extracted
+                   )))))
+                   ;; really do finalize computation here
           
           
 
