@@ -104,6 +104,10 @@
 
 (define (shr x y) (arithmetic-shift x (- y)))
 
+(define (u8+ . xs) (bitwise-and (apply + xs) #xff))
+
+(define (u8- . xs) (bitwise-and (apply - xs) #xff))
+
 (define (u32+ . xs) (bitwise-and (apply + xs) #xffffffff))
 
 (define (u64+ . xs) (bitwise-and (apply + xs) #xffffffffffffffff))

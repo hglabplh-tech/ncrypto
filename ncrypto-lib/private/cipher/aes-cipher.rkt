@@ -318,7 +318,7 @@
     ;;t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[ 6];
     ;;t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[ 7];
 
-(define (really-calculate-round round-key-offset round-key regs)
+(define (really-calculate-round-enc round-key-offset round-key regs)
   (let* ([rk-offset round-key-offset]
          [result (set-reg regs 'T0 (bitwise-xor
                           (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S0) 24)))
@@ -349,10 +349,42 @@
                           (u32+ (vector-ref round-key rk-offset))))]
           [rk-offset (add1 rk-offset)])
     (values rk-offset result)))
+
+(define (really-calculate-round-decr round-key-offset round-key regs)
+  (let* ([rk-offset round-key-offset]
+         [result (set-reg regs 'T0 (bitwise-xor
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S0) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S3) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S2) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S1)) (u32+ #xff)))
+                          (u32+ (vector-ref round-key rk-offset))))]
+         [rk-offset (add1 rk-offset)]
+         [result (set-reg result 'T1 (bitwise-xor
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S1) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S0) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S3) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S2)) (u32+ #xff)))
+                          (u32+ (vector-ref round-key rk-offset))))]
+         [rk-offset (add1 rk-offset)]
+          [result (set-reg 'T2 (bitwise-xor
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S2) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S1) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S0) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S3)) (u32+ #xff)))
+                          (u32+ (vector-ref round-key rk-offset))))]
+          [rk-offset (add1 rk-offset)]
+          [result (set-reg 'T1 (bitwise-xor
+                          (list-ref list-te0-encr (>> (u32+ (regs-ref regs 'S3) 24)))
+                          (list-ref list-te1-encr (bitwise-and (>> (u32+ (regs-ref regs 'S2) 16)) (u32+ #xff)))
+                          (list-ref list-te2-encr (bitwise-and (>> (u32+ (regs-ref regs 'S1) 8)) (u32+ #xff)))
+                          (list-ref list-te3-encr (bitwise-and (u32+ (regs-ref regs 'S0)) (u32+ #xff)))
+                          (u32+ (vector-ref round-key rk-offset))))]
+          [rk-offset (add1 rk-offset)])
+    (values rk-offset result)))
          
                           
-(define (aes-final-load-encr-bytes regs round-key nr)
-  (let* ([rk-offset (u32+ (<< nr 2))]
+(define (aes-final-load-encr-bytes regs round-key rk-offset nr)
+  (let* ([rk-offset (u32+ rk-offset (<< nr 2))]
         [out (32->bytes-big (u32+ (bitwise-xor
                              (u32+ (bitwise-and (list-ref list-te4-encr (>> (u32+ (regs-ref regs 'T0) 24)))                    #xff000000))
                              (u32+ (bitwise-and (list-ref list-te4-encr (bitwise-and (>> (u32+ (regs-ref regs 'T1) 16)) #xff)) #x00ff0000))
@@ -383,7 +415,7 @@
                              ))))])
       out))
 
-(define (aes-encrypt round-key nr in-bytes)
+(define (aes-cryptit round-key nr in-bytes round-calculator)
   (let ([regs-calc (make-regs-calc 0 0 0 0 0 0 0 0)])
     (let* ([rounds (cond [(eq? nr 10) 9]
                   [(eq? nr 12) 11]
@@ -396,21 +428,19 @@
                        [rk-offset-int 4]
                        [round 1])
         (let-values ([(rk-offset regs-int)
-                      (really-calculate-round rk-offset-int round-key regs-calc-int)])
+                      (round-calculator rk-offset-int round-key regs-calc-int)])
           (cond [(<= round rounds)
                  (let ([regs-to-call (cond [(< round rounds)
                                             (assign-regs regs-int regs-to-s)]
                                            [regs-int])])
                  (calc-round regs-int (add1 rk-offset) (add1 round))) ] ;; think about conditions if they are ok
-                [(aes-final-load-encr-bytes regs-int round-key nr )]);; correct this and format this can be extracted
+                [(aes-final-load-encr-bytes regs-int round-key rk-offset nr )]);; correct this and format this can be extracted
                    )))))
-                   ;; really do finalize computation here
+                   
           
           
 
-(define (aes-decrypt round-key nr in-bytes)
-  #f)
-  
+
                              
           
           
@@ -426,13 +456,13 @@
       (cipher-state-aes encr-key decr-key nr)))) 
 
 (define (aes-block-encrypt block-state in)
-  (let ([result (aes-encrypt (cipher-state-aes-encr-key block-state)
-                             (cipher-state-aes-rounds block-state) in)])
+  (let ([result (aes-cryptit (cipher-state-aes-encr-key block-state)
+                             (cipher-state-aes-rounds block-state) in really-calculate-round-enc)])
     result))
 
 (define (aes-block-decrypt block-state in)
-  (let ([result (aes-decrypt (cipher-state-aes-decr-key block-state)
-                             (cipher-state-aes-rounds block-state) in)])
+  (let ([result (aes-cryptit (cipher-state-aes-decr-key block-state)
+                             (cipher-state-aes-rounds block-state) in really-calculate-round-decr)])
     result))
 
 
