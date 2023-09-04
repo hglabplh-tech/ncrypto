@@ -26,7 +26,11 @@
 (define (do-padding the-bytes block-len type)
   (case type
     ['pkcs7
-     (do-pkcs7-padding the-bytes)]))
+     (do-pkcs7-padding the-bytes block-len)]
+    ['x923
+     (do-x923-padding  the-bytes block-len)]
+    ['iso7816
+     (do-iso7816-padding the-bytes block-len]))
 
 (define (do-pkcs7-padding the-bytes block-len)
   (let* ([length (bytes-length the-bytes)]
@@ -34,6 +38,26 @@
          [pad-block (cond [(> pad-length 0)
                             (make-bytes pad-length (u8+ pad-length))]
                            [else the-bytes])])
+    (cond [(equal? the-bytes pad-block) the-bytes]
+          [else (bytes-append the-bytes pad-block)])))
+
+(define (do-x923-padding  the-bytes block-len)
+  (let* ([length (bytes-length the-bytes)]
+         [pad-length  (- block-len length)]
+         [pad-block (cond [(> pad-length 0)
+                            (make-bytes pad-length (u8+ 0))]
+                           [else the-bytes])])
+    (bytes-set! pad-block (- pad-length 1) (u8+ pad-length))
+    (cond [(equal? the-bytes pad-block) the-bytes]
+          [else (bytes-append the-bytes pad-block)])))
+
+(define (do-iso7816-padding  the-bytes block-len)
+  (let* ([length (bytes-length the-bytes)]
+         [pad-length  (- block-len length)]
+         [pad-block (cond [(> pad-length 0)
+                            (make-bytes pad-length (u8+ 0))]
+                           [else the-bytes])])
+    (bytes-set! pad-block 0 #x80)
     (cond [(equal? the-bytes pad-block) the-bytes]
           [else (bytes-append the-bytes pad-block)])))
           
