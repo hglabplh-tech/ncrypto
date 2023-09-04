@@ -30,7 +30,7 @@
     ['x923
      (do-x923-padding  the-bytes block-len)]
     ['iso7816
-     (do-iso7816-padding the-bytes block-len]))
+     (do-iso7816-padding the-bytes block-len)]))
 
 (define (do-pkcs7-padding the-bytes block-len)
   (let* ([length (bytes-length the-bytes)]
