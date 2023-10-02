@@ -167,7 +167,7 @@
                 (bytes-set! p 3 (bitwise-and integer         #x000000FF))
                 p)]))
 
-;; bytes 64 fast checks delete later
+;; bytes 64 fast checks delete later TODO: make tests out of it
 (bytes->64-big (integer->bytes 71 8 #f))
 (bytes->64-little (integer->bytes 71 8 #f))
 (bytes->64-force-big (integer->bytes 71 8 #f))

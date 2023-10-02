@@ -140,7 +140,7 @@
   (bitwise-arithmetic-shift-right value shift))
 
 
-;; utils check delete them later
+;; utils check delete them later TODO: make tests out of it
 (sqrt 4)
 (cbrt 27)
 (shr 16 3)

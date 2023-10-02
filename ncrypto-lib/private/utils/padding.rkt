@@ -19,25 +19,27 @@
 
 #lang racket/base
 
-(require "basic-sig-utils.rkt")
+(require  binaryio/integer
+          "basic-sig-utils.rkt"
+          "endianess.rkt")
   
 (provide (all-defined-out))
 
 (define (do-padding the-bytes block-len type)
   (case type
-    ['pkcs7
+    [(pkcs7)
      (do-pkcs7-padding the-bytes block-len)]
-    ['x923
+    [(x923)
      (do-x923-padding  the-bytes block-len)]
-    ['iso7816
+    [(iso7816)
      (do-iso7816-padding the-bytes block-len)]))
 
 (define (do-pkcs7-padding the-bytes block-len)
   (let* ([length (bytes-length the-bytes)]
          [pad-length  (- block-len length)]
          [pad-block (cond [(> pad-length 0)
-                            (make-bytes pad-length (u8+ pad-length))]
-                           [else the-bytes])])
+                           (make-bytes pad-length (u8+ pad-length))]
+                          [else the-bytes])])
     (cond [(equal? the-bytes pad-block) the-bytes]
           [else (bytes-append the-bytes pad-block)])))
 
@@ -45,8 +47,8 @@
   (let* ([length (bytes-length the-bytes)]
          [pad-length  (- block-len length)]
          [pad-block (cond [(> pad-length 0)
-                            (make-bytes pad-length (u8+ 0))]
-                           [else the-bytes])])
+                           (make-bytes pad-length (u8+ 0))]
+                          [else the-bytes])])
     (bytes-set! pad-block (- pad-length 1) (u8+ pad-length))
     (cond [(equal? the-bytes pad-block) the-bytes]
           [else (bytes-append the-bytes pad-block)])))
@@ -55,9 +57,56 @@
   (let* ([length (bytes-length the-bytes)]
          [pad-length  (- block-len length)]
          [pad-block (cond [(> pad-length 0)
-                            (make-bytes pad-length (u8+ 0))]
-                           [else the-bytes])])
+                           (make-bytes pad-length (u8+ 0))]
+                          [else the-bytes])])
     (bytes-set! pad-block 0 #x80)
     (cond [(equal? the-bytes pad-block) the-bytes]
           [else (bytes-append the-bytes pad-block)])))
-          
+
+(define (search-in-bytes bytes byte)
+  (let recurs ([pos 0])
+    (cond [(equal? (bytes-ref bytes pos) byte)
+           pos]
+          [else (recurs (+ pos 1))])))
+
+(define (do-unpad padded-data block-len type)
+  (let* ([data-len (bytes-length padded-data)]
+         [padding-len
+          (cond [(equal? data-len 0) (error "unpad: Zero-length input cannot be unpadded")]
+                [(modulo data-len block-len) (error "unpad: Input data is not padded")]
+                [else
+                 (case type
+                   [(pkcs7 x923)
+                    (let ([pad-len (bytes->integer (bytes-ref padded-data (- data-len 1)))])
+                
+                      (let-values ([(pad-bytes msg)
+                                    (case type
+                                      [(pkcs7)
+                                       (values
+                                        (make-bytes pad-len (u8+ pad-len))
+                                        "unpad: PKCS#7 padding is incorrect.")]
+                                      [(x923)
+                                       (values ((lambda ()
+                                                  (let ([bytes (make-bytes pad-len (u8+ pad-len))])
+                                                    (bytes-set! bytes (- pad-len 1) (u8+ pad-len))
+                                                    bytes)))  "unpad: ANSI X.923 padding is incorrect.")])]) 
+
+                        (cond [(not (bytes=? pad-bytes (subbytes padded-data (- data-len pad-len) pad-len)))
+                               (error msg)]) pad-len))]
+                   [(iso7816)
+                    (let* ([pad-len (- (bytes-length padded-data) (search-in-bytes padded-data #x80))]
+                           [pad-bytes ((lambda ()
+                                         (cond [(or (< pad-len 1) (> pad-len (min block-len data-len))) (error " unpad: Padding is incorrect.")])
+                                         (let ([bytes (make-bytes pad-len (u8+ pad-len))])
+                                           (bytes-set! bytes 0 #x80)
+                                           bytes)))])
+                      (cond [(not (bytes=? pad-bytes (subbytes padded-data (- data-len pad-len) pad-len)))
+                             (error "unpad: ISO 7816-4 padding is incorrect.")]) pad-len)])])])
+    (subbytes padded-data (- data-len padding-len) padding-len)))
+              
+
+
+   
+   
+ 
+
