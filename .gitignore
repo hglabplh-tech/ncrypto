@@ -5,3 +5,7 @@
 *.rkt~
 *.dep
 *.zo
+ncrypto-lib/private/asn1/compiled/drracket/errortrace/asn1-oids_rkt.dep
+*.rkt~
+*.dep
+*.zo
